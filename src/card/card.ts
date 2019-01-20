@@ -76,6 +76,26 @@ export class Card implements Serializable {
     );
   }
 
+  /**
+   * Checks if this card instance may be played upon
+   * the given card.
+   *
+   * @example
+   *
+   * const blueZero = new Card(Values.ZERO, Colors.BLUE);
+   * const wild = new Card(Values.WILD);
+   * const redSkip = new Card(Values.SKIP, Colors.RED);
+   * blueZero.matches(redSkip);
+   * //> false
+   * blueZero.matches(new Card(Values.ZERO, Colors.YELLOW));
+   * //> true
+   * wild.matches(redSkip);
+   * //> true
+   *
+   * @throws If any of the cards don't have their colors set.
+   *
+   * @param other The card to be compared with
+   */
   matches(other: Card) {
     if (this.isWildCard()) return true;
     else if (this.color === undefined || other.color === undefined)
@@ -100,6 +120,14 @@ export class Card implements Serializable {
     }
   }
 
+  /**
+   * Check if the card exactly equals with the provided values.
+   *
+   * If `color` is not specified, only `value` is checked.
+   *
+   * @param value Value to check against
+   * @param color Color to check against
+   */
   is(value: Values, color?: Colors) {
     let matches = this.value === value;
     if (!!color) matches = matches && this.color === color;

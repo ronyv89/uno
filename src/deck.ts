@@ -1,5 +1,66 @@
 import { shuffle } from 'shuffle';
 import { Card, Colors, Values } from './card';
+import { CardSnapshot } from './card/card';
+import Serializable from './serializable';
+
+export interface DeckSnapshot {
+  cards: CardSnapshot[];
+}
+export class Deck implements Serializable {
+  private shuffle = shuffle({ deck: createUnoDeck() });
+
+  static fromSnapshot(snapshot: DeckSnapshot) {
+    return new Deck(snapshot.cards.map(Card.fromSnapshot));
+  }
+
+  /**
+   * Create a new Uno deck.
+   * `cards` parameter is used to recover
+   * from a previous snapshot.
+   *
+   * @param cards Set the initial drawing stack
+   *
+   * @see {@link Deck.fromSnapshot}
+   */
+  constructor(cards?: Card[]) {
+    if (cards != undefined) this.shuffle.cards = cards;
+  }
+
+  get cards() {
+    return this.shuffle.cards;
+  }
+
+  get length() {
+    return this.shuffle.length;
+  }
+
+  draw(num?: number) {
+    num = num || 1;
+    let cards: Card[] = [];
+
+    // if the amount to draw is more than the cards we have...
+    if (num >= this.length) {
+      const length = this.length;
+
+      // draw all we have...
+      cards = cards.concat(this.shuffle.draw.call(this, length));
+
+      // regenerate the draw pile
+      this.shuffle.reset();
+      this.shuffle.shuffle();
+
+      // then draw the rest we need
+      num = num - length;
+      if (num === 0) return cards;
+    }
+
+    return cards.concat(this.shuffle.draw(num));
+  }
+
+  createSnapshot(): DeckSnapshot {
+    return { cards: this.cards.map(c => c.createSnapshot()) };
+  }
+}
 
 function createUnoDeck() {
   /*
@@ -40,42 +101,4 @@ function createUnoDeck() {
   deck.push.apply(deck, createCards(4, Values.WILD_DRAW_FOUR));
 
   return deck;
-}
-
-export class Deck {
-  private originalDraw: Function;
-  private shuffle = shuffle({ deck: createUnoDeck() });
-
-  get cards() {
-    return this.shuffle.cards;
-  }
-
-  get length() {
-    return this.shuffle.length;
-  }
-
-  constructor() {}
-
-  draw(num?: number) {
-    num = num || 1;
-    let cards: Card[] = [];
-
-    // if the amount to draw is more than the cards we have...
-    if (num >= this.length) {
-      const length = this.length;
-
-      // draw all we have...
-      cards = cards.concat(this.shuffle.draw.call(this, length));
-
-      // regenerate the draw pile
-      this.shuffle.reset();
-      this.shuffle.shuffle();
-
-      // then draw the rest we need
-      num = num - length;
-      if (num === 0) return cards;
-    }
-
-    return cards.concat(this.shuffle.draw(num));
-  }
 }

@@ -1,8 +1,21 @@
 import { Card, Values } from './card';
+import { CardSnapshot } from './card/card';
+import Serializable from './serializable';
 
-export class Player {
+export interface PlayerSnapshot {
   name: string;
+  hand: CardSnapshot[];
+}
+export class Player implements Serializable {
+  name: string;
+  // FIXME: make private, initialize on constructor
   hand: Card[] = [];
+
+  static fromSnapshot(snapshot: PlayerSnapshot) {
+    const player = new Player(snapshot.name);
+    player.hand = snapshot.hand.map(Card.fromSnapshot);
+    return player;
+  }
 
   constructor(name: string) {
     name = !!name ? name.trim() : name;
@@ -36,6 +49,13 @@ export class Player {
 
   valueOf() {
     return this.name;
+  }
+
+  createSnapshot(): PlayerSnapshot {
+    return {
+      name: this.name,
+      hand: this.hand.map(c => c.createSnapshot()),
+    };
   }
 
   toString() {

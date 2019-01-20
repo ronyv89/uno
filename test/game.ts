@@ -403,4 +403,9 @@ describe('Game', function() {
       });
     });
   });
+
+  describe('serialization', function() {
+    describe('.fromSnapshot()', () => pending());
+    describe('#createSnapshot()', () => pending());
+  });
 });

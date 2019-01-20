@@ -1,5 +1,6 @@
 import { Card, Values } from './card';
-import { Deck } from './deck';
+import { CardSnapshot } from './card/card';
+import { Deck, DeckSnapshot } from './deck';
 import {
   BeforeCardPlayEvent,
   BeforeDrawEvent,
@@ -11,10 +12,21 @@ import {
   NextPlayerEvent,
 } from './events';
 import { GameDirections } from './game-directions';
-import { Player } from './player';
+import { Player, PlayerSnapshot } from './player';
+import Serializable from './serializable';
 
 const CARDS_PER_PLAYER = 7;
 
+export interface GameSnapshot {
+  currentPlayerName: string;
+  direction: number;
+  players: PlayerSnapshot[];
+  drawPile: DeckSnapshot;
+  discardedCard: CardSnapshot;
+  drawn: boolean;
+  yellers: YellersMap;
+}
+type YellersMap = { [key: string]: boolean };
 /**
  * Uno game.
  *
@@ -26,9 +38,11 @@ const CARDS_PER_PLAYER = 7;
  * @fires `nextplayer`
  * @fires `end`
  */
-export class Game extends CancelableEventEmitter {
+export class Game extends CancelableEventEmitter implements Serializable {
   private drawPile: Deck;
   private direction: GameDirections;
+  // FIXME: No need to have complete player here.
+  // Only name is fine
   private _currentPlayer: Player;
   private _players: Player[] = [];
   private _discardedCard: Card;
@@ -44,8 +58,25 @@ export class Game extends CancelableEventEmitter {
    * key: player name
    * value: true/false
    */
-  private yellers: { [key: string]: boolean } = {};
+  private yellers: YellersMap = {};
 
+  /**
+   * Create a game instance from a given snapshot.
+   *
+   * @param snapshot A valid game snapshot taken
+   * with {@link Game.createSnapshot}.
+   */
+  static fromSnapshot(snapshot: GameSnapshot): Game {
+    const game = new Game(['placeholder 1', 'placeholder 2']);
+    game.loadSnapshot(snapshot);
+    return game;
+  }
+
+  /**
+   * Standard.
+   * @param playerNames Players
+   * @param houseRules HouseRules
+   */
   constructor(playerNames: string[], houseRules: { setup: Function }[] = []) {
     super();
 
@@ -350,6 +381,34 @@ export class Game extends CancelableEventEmitter {
         amount += cards.reduce((s: number, c: Card) => (s += c.score), 0);
         return amount;
       }, 0);
+  }
+
+  /**
+   * Set the state of this game instance
+   * to match the one in the given snapshot.
+   */
+  private loadSnapshot(snapshot: GameSnapshot) {
+    this._players = snapshot.players.map(Player.fromSnapshot);
+    this._currentPlayer = this._players.find(
+      p => p.name === snapshot.currentPlayerName,
+    );
+    this.direction = snapshot.direction;
+    this.drawPile = Deck.fromSnapshot(snapshot.drawPile);
+    this._discardedCard = Card.fromSnapshot(snapshot.discardedCard);
+    this.drawn = snapshot.drawn;
+    this.yellers = { ...snapshot.yellers };
+  }
+
+  createSnapshot(): GameSnapshot {
+    return {
+      currentPlayerName: this.currentPlayer.name,
+      direction: this.direction,
+      players: this.players.map(p => p.createSnapshot()),
+      drawPile: this.drawPile.createSnapshot(),
+      discardedCard: this.discardedCard.createSnapshot(),
+      drawn: this.drawn,
+      yellers: { ...this.yellers },
+    };
   }
 }
 

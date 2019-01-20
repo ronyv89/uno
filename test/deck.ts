@@ -85,6 +85,11 @@ describe('Deck', function() {
     expect(deck).toHaveLength(107);
   });
 
+  describe('serialization', function() {
+    describe('.fromSnapshot()', () => pending());
+    describe('#createSnapshot()', () => pending());
+  });
+
   describe('Card', function() {
     describe('#constructor', function() {
       it('should create a number card', function() {

@@ -202,6 +202,26 @@ describe('Card', function() {
     });
   });
 
+  describe('.fromSnapshot()', function() {
+    it('should import a valid snapshot', () => {
+      const snapshot = {color: 0, value: 12};
+      const redSkip = Card.fromSnapshot(snapshot);
+      expect(redSkip).toBeDefined();
+      expect(redSkip.color).toBe(Colors.RED);
+      expect(redSkip.value).toBe(Values.SKIP);
+    });
+  });
+
+  describe('#createSnapshot()', function() {
+    it('should export a valid snapshot', () => {
+      const blueZero = new Card(Values.ZERO, Colors.BLUE);
+      const snapshot = blueZero.createSnapshot();
+      expect(snapshot).toBeDefined();
+      expect(snapshot.color).toBe(1);
+      expect(snapshot.value).toBe(0);
+    });
+  });
+
   describe('#toString()', function() {
     it('should return the correct name for each card', () => {
       expect(new Card(Values.ZERO, Colors.BLUE).toString()).toBe('BLUE ZERO');

@@ -1,9 +1,22 @@
 import { Colors } from './colors';
 import { Values } from './values';
+import Serializable from '../serializable';
 
-export class Card {
+export interface CardSnapshot {
+  value: number;
+  color: number;
+}
+export class Card implements Serializable {
   private _value: Values;
   private _color: Colors | undefined;
+
+  /**
+   * Create instance from snapshot taken with
+   * {@link createSnapshot}.
+   */
+  static fromSnapshot(snapshot: CardSnapshot): Card {
+    return new Card(snapshot.value, snapshot.color);
+  }
 
   constructor(value: Values, color?: Colors) {
     if (!Values.isWild(value) && color === undefined) {
@@ -91,6 +104,13 @@ export class Card {
     let matches = this.value === value;
     if (!!color) matches = matches && this.color === color;
     return matches;
+  }
+
+  createSnapshot(): CardSnapshot {
+    return {
+      value: this.value,
+      color: this.color,
+    };
   }
 
   toString() {

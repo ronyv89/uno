@@ -45,31 +45,44 @@ function createUnoDeck() {
 export class Deck {
   private originalDraw: Function;
   private shuffle = shuffle({ deck: createUnoDeck() });
+  private discarded: Array<Card> = [];
 
   get cards() {
     return this.shuffle.cards;
+  }
+
+  get discardedPile() {
+    return this.discarded;
   }
 
   get length() {
     return this.shuffle.length;
   }
 
-  constructor() {}
+  discard(card: Card) {
+    this.discarded.push(card);
+  }
+
+  reshuffle() {
+    this.shuffle = shuffle({ deck: this.discarded });
+  }
 
   draw(num?: number) {
     num = num || 1;
     let cards: Card[] = [];
-
     // if the amount to draw is more than the cards we have...
     if (num >= this.length) {
       const length = this.length;
-
+      this.cards;
       // draw all we have...
       cards = cards.concat(this.shuffle.draw.call(this, length));
 
-      // regenerate the draw pile
-      this.shuffle.reset();
-      this.shuffle.shuffle();
+      // // regenerate the draw pile
+      // this.shuffle.reset();
+      // this.shuffle.shuffle();
+
+      // make the existing discarded pile, the new draw pile
+      this.reshuffle();
 
       // then draw the rest we need
       num = num - length;

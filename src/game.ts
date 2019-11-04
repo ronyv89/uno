@@ -83,7 +83,7 @@ export class Game extends CancelableEventEmitter {
     do {
       this._discardedCard = this.drawPile.draw()[0];
     } while (this._discardedCard.isSpecialCard());
-
+    this.drawPile.discard(this._discardedCard);
     // select starting player
     this._currentPlayer = this._players[
       getRandomInt(0, this._players.length - 1)
@@ -210,7 +210,7 @@ export class Game extends CancelableEventEmitter {
 
     currentPlayer.removeCard(card);
     this._discardedCard = card;
-
+    this.drawPile.discard(card);
     if (
       !silent &&
       !this.dispatchEvent(new CardPlayEvent(card, this._currentPlayer))
@@ -353,10 +353,12 @@ export class Game extends CancelableEventEmitter {
   }
 
   calculateScore() {
-    return this._players.map(player => player.hand).reduce((amount, cards) => {
-      amount += cards.reduce((s: number, c: Card) => (s += c.score), 0);
-      return amount;
-    }, 0);
+    return this._players
+      .map(player => player.hand)
+      .reduce((amount, cards) => {
+        amount += cards.reduce((s: number, c: Card) => (s += c.score), 0);
+        return amount;
+      }, 0);
   }
 }
 
